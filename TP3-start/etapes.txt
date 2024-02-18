@@ -1,0 +1,62 @@
+1
+client - main:
+ - obtenir les informations sur le serveur dont le nom (ou l'IP) et le port ont été donnés en paramètre
+
+2
+client - main:
+ - créer le socket
+serveur - main:
+ - créer le socket
+ - bind sur le port donné en paramètre
+ - lancer le thread server_listen_loop
+serveur - server_listen_loop:
+ - boucle d'attente de messages de clients
+ - switch sur le premier octet lu (REQUEST_ID, RELEASE_ID, PLAYER_MOVE)
+   -> ne rien faire pour le moment
+
+3
+client - get_player_id:
+ - envoi demande id + attente réponse
+ - à la réponse, affichage + return de l'id reçu
+serveur - server_listen_loop:
+ - à la réception d'un message REQUEST_ID:
+   - obtention de l'id, stockage sockaddr_in, init_player, envoi réponse
+
+4
+client - main:
+ - lancer le thread client_listen_loop
+client - client_listen_loop:
+ - boucle d'attente de messages du serveur
+ - à la réception d'un message GAME_DATA
+   - copie des données reçues dans la struct GameData locale
+   - mise à 1 de la variable `redraw`
+serveur - main:
+ - lancer le thread server_game_loop
+serveur - server_game_loop:
+ - boucle infinie avec mesure de durée d'exécution + attente du temps restant
+ - appel à move_players
+ - parcours des players valides
+   - pour chacun: envoi de la struct GameData
+
+5
+client - main:
+ - envoi des messages PLAYER_MOVE à l'appui sur une touche de direction
+serveur - server_listen_loop:
+ - à la réception d'un message PLAYER_MOVE:
+   - update_player_direction
+
+6
+client - main:
+ - à la fin de la boucle principale:
+   - fin du thread client_listen_loop
+   - envoi d'un message RELEASE_ID
+   - fermeture socket
+serveur - server_listen_loop:
+ - à la réception d'un message RELEASE_ID:
+   - release_player
+
+7
+utiliser un mutex pour éviter l'accès concurrent aux données GameData
+
+8
+faire évoluer le gameplay
